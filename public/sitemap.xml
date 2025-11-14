@@ -2,13 +2,25 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>https://blog.razyang.com/tags/macos/</loc>
-    <lastmod>2022-08-07T12:52:43+08:00</lastmod>
-  </url><url>
     <loc>https://blog.razyang.com/</loc>
-    <lastmod>2022-08-07T12:52:43+08:00</lastmod>
+    <lastmod>2025-11-14T09:22:11+08:00</lastmod>
+  </url><url>
+    <loc>https://blog.razyang.com/posts/way-to-nix-2/</loc>
+    <lastmod>2025-11-14T09:22:11+08:00</lastmod>
   </url><url>
     <loc>https://blog.razyang.com/posts/</loc>
+    <lastmod>2025-11-14T09:22:11+08:00</lastmod>
+  </url><url>
+    <loc>https://blog.razyang.com/posts/way-to-nix-3/</loc>
+    <lastmod>2025-11-01T19:12:11+08:00</lastmod>
+  </url><url>
+    <loc>https://blog.razyang.com/posts/nix-and-content-address/</loc>
+    <lastmod>2023-12-08T16:34:44+08:00</lastmod>
+  </url><url>
+    <loc>https://blog.razyang.com/posts/way-to-nix-1/</loc>
+    <lastmod>2023-12-01T11:56:15+08:00</lastmod>
+  </url><url>
+    <loc>https://blog.razyang.com/tags/macos/</loc>
     <lastmod>2022-08-07T12:52:43+08:00</lastmod>
   </url><url>
     <loc>https://blog.razyang.com/tags/</loc>
@@ -20,10 +32,10 @@
     <loc>https://blog.razyang.com/categories/</loc>
     <lastmod>2022-08-04T11:30:51+08:00</lastmod>
   </url><url>
-    <loc>https://blog.razyang.com/tags/hugo/</loc>
+    <loc>https://blog.razyang.com/categories/hugo/</loc>
     <lastmod>2022-08-04T11:30:51+08:00</lastmod>
   </url><url>
-    <loc>https://blog.razyang.com/categories/hugo/</loc>
+    <loc>https://blog.razyang.com/tags/hugo/</loc>
     <lastmod>2022-08-04T11:30:51+08:00</lastmod>
   </url><url>
     <loc>https://blog.razyang.com/posts/template-post/</loc>

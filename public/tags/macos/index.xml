@@ -1,28 +1,19 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>MacOS on Misc</title>
     <link>https://blog.razyang.com/tags/macos/</link>
     <description>Recent content in MacOS on Misc</description>
-    <generator>Hugo -- gohugo.io</generator>
+    <generator>Hugo</generator>
     <language>en</language>
-    <lastBuildDate>Sun, 07 Aug 2022 12:52:43 +0800</lastBuildDate><atom:link href="https://blog.razyang.com/tags/macos/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Sun, 07 Aug 2022 12:52:43 +0800</lastBuildDate>
+    <atom:link href="https://blog.razyang.com/tags/macos/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>叛逃</title>
       <link>https://blog.razyang.com/posts/defection/</link>
       <pubDate>Sun, 07 Aug 2022 12:52:43 +0800</pubDate>
-      
       <guid>https://blog.razyang.com/posts/defection/</guid>
-      <description>所谓叛逃 仔细想一想，自从上大学开始，我用linux做为日常工作和学习的系统也有将近六年了。 这六年来，常见的Linux发行版基本都装了个遍，常见的桌面环境和窗口管理器也基本用了个遍。 不过随着时间流逝，我逐渐发现，桌面环境折腾无数遍，其实实际在用的图形界面软件只有三个：emacs、chrome、alacritty。
-更抽象一点的话，其实就是一个编辑器，一个浏览器还有一个终端模拟器。其他软件使用频率都非常低，最近两年内，我逐渐发现自己打开文件管理器的频率也越来越低，以至于文件管理器对于我日常的电脑使用来说，也成为了一个没有必要的软件。
-铺垫了这么多，其实我就是想说，爷叛逃了，到MacOS。
-目的地 其实也没啥道理，最近想买一个笔记本，看了一圈。intel 11代摆大烂，12代功耗爆炸；AMD 6000系的笔记本，续航稍微好一些，但GPU硬件设计有问题。仔细想了一想，苹果的笔记本成了这两年唯一没重大问题，没开过什么倒车的设备了。
-所以，Macbook Air m2 16+512，请： 基本配置 终端应用 brew install p7zip starship rustup-init tmux go coreutils grep startship bottom zoxide fzf ripgrep shellcheck starship hugo fd 7z pandoc neofetch 大概先装这么多吧，zsh配置后续再迁移过来
-GUI 写这篇文章的时候突然恍然大悟，原来我能在这台电脑上装qq和微信，突然间一股惆怅的情绪涌上心头
-其实也没啥好装的，浏览器暂时看看safari表现怎么样了，之后如果不成的话再装chrome。
-文本编辑器的话，还是当之无愧的emacs。虽然在macos上的这个版本没有native compile，但是感觉响应速度没有什么明显区别：
-brew install --cask emacs </description>
+      <description>&lt;h1 id=&#34;所谓叛逃&#34;&gt;所谓叛逃&lt;/h1&gt;&#xA;&lt;p&gt;仔细想一想，自从上大学开始，我用linux做为日常工作和学习的系统也有将近六年了。&#xA;这六年来，常见的Linux发行版基本都装了个遍，常见的桌面环境和窗口管理器也基本用了个遍。&#xA;不过随着时间流逝，我逐渐发现，桌面环境折腾无数遍，其实实际在用的图形界面软件只有三个：&lt;code&gt;emacs&lt;/code&gt;、&lt;code&gt;chrome&lt;/code&gt;、&lt;code&gt;alacritty&lt;/code&gt;。&lt;/p&gt;&#xA;&lt;p&gt;更抽象一点的话，其实就是一个编辑器，一个浏览器还有一个终端模拟器。其他软件使用频率都非常低，最近两年内，我逐渐发现自己打开文件管理器的频率也越来越低，以至于文件管理器对于我日常的电脑使用来说，也成为了一个没有必要的软件。&lt;/p&gt;&#xA;&lt;p&gt;铺垫了这么多，其实我就是想说，爷叛逃了，到MacOS。&lt;/p&gt;&#xA;&lt;h1 id=&#34;目的地&#34;&gt;目的地&lt;/h1&gt;&#xA;&lt;p&gt;其实也没啥道理，最近想买一个笔记本，看了一圈。intel 11代摆大烂，12代功耗爆炸；AMD 6000系的笔记本，续航稍微好一些，但GPU硬件设计有问题。仔细想了一想，苹果的笔记本成了这两年唯一没重大问题，没开过什么倒车的设备了。&lt;/p&gt;&#xA;&lt;p&gt;所以，Macbook Air m2 16+512，请：&#xA;&lt;img src=&#34;2022-08-07_13.23.10.png&#34; alt=&#34;neofetch&#34;&gt;&lt;/p&gt;&#xA;&lt;h1 id=&#34;基本配置&#34;&gt;基本配置&lt;/h1&gt;&#xA;&lt;h2 id=&#34;终端应用&#34;&gt;终端应用&lt;/h2&gt;&#xA;&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;brew install p7zip starship rustup-init tmux go coreutils grep startship bottom zoxide fzf ripgrep shellcheck starship hugo fd 7z pandoc neofetch&#xA;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;大概先装这么多吧，zsh配置后续再迁移过来&lt;/p&gt;&#xA;&lt;h2 id=&#34;gui&#34;&gt;GUI&lt;/h2&gt;&#xA;&lt;blockquote&gt;&#xA;&lt;p&gt;写这篇文章的时候突然恍然大悟，原来我能在这台电脑上装qq和微信，突然间一股惆怅的情绪涌上心头&lt;/p&gt;&lt;/blockquote&gt;&#xA;&lt;p&gt;其实也没啥好装的，浏览器暂时看看safari表现怎么样了，之后如果不成的话再装chrome。&lt;/p&gt;&#xA;&lt;p&gt;文本编辑器的话，还是当之无愧的emacs。虽然在macos上的这个版本没有native compile，但是感觉响应速度没有什么明显区别：&lt;/p&gt;&#xA;&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;brew install --cask emacs&#xA;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;</description>
     </item>
-    
   </channel>
 </rss>

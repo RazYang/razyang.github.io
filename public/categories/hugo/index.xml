@@ -1,26 +1,19 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Hugo on Misc</title>
     <link>https://blog.razyang.com/categories/hugo/</link>
     <description>Recent content in Hugo on Misc</description>
-    <generator>Hugo -- gohugo.io</generator>
+    <generator>Hugo</generator>
     <language>en</language>
-    <lastBuildDate>Thu, 04 Aug 2022 11:30:51 +0800</lastBuildDate><atom:link href="https://blog.razyang.com/categories/hugo/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Thu, 04 Aug 2022 11:30:51 +0800</lastBuildDate>
+    <atom:link href="https://blog.razyang.com/categories/hugo/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Template Post</title>
       <link>https://blog.razyang.com/posts/template-post/</link>
       <pubDate>Thu, 04 Aug 2022 11:30:51 +0800</pubDate>
-      
       <guid>https://blog.razyang.com/posts/template-post/</guid>
-      <description>segment segment segment segment Text style This text is in italics. And so is this text.
-This text is in bold. And so is this text.
-This text is in both. As is this! And this!
-Paragraph This is a paragraph. I&amp;rsquo;m typing in a paragraph isn&amp;rsquo;t this fun?
-Now I&amp;rsquo;m in paragraph 2. I&amp;rsquo;m still in paragraph 2 too!
-I&amp;rsquo;m in paragraph three!
-This is a block quote. You can either manually wrap your lines and put a &amp;gt; before every line or you can let your lines get really long and wrap on their own.</description>
+      <description>&lt;h1 id=&#34;segment&#34;&gt;segment&lt;/h1&gt;&#xA;&lt;h2 id=&#34;segment-1&#34;&gt;segment&lt;/h2&gt;&#xA;&lt;h3 id=&#34;segment-2&#34;&gt;segment&lt;/h3&gt;&#xA;&lt;h4 id=&#34;segment-3&#34;&gt;segment&lt;/h4&gt;&#xA;&lt;h3 id=&#34;text-style&#34;&gt;Text style&lt;/h3&gt;&#xA;&lt;p&gt;&lt;em&gt;This text is in italics.&lt;/em&gt;&#xA;&lt;em&gt;And so is this text.&lt;/em&gt;&lt;/p&gt;&#xA;&lt;p&gt;&lt;strong&gt;This text is in bold.&lt;/strong&gt;&#xA;&lt;strong&gt;And so is this text.&lt;/strong&gt;&lt;/p&gt;&#xA;&lt;p&gt;&lt;em&gt;&lt;strong&gt;This text is in both.&lt;/strong&gt;&lt;/em&gt;&#xA;&lt;strong&gt;&lt;em&gt;As is this!&lt;/em&gt;&lt;/strong&gt;&#xA;&lt;em&gt;&lt;strong&gt;And this!&lt;/strong&gt;&lt;/em&gt;&lt;/p&gt;&#xA;&lt;h3 id=&#34;paragraph&#34;&gt;Paragraph&lt;/h3&gt;&#xA;&lt;p&gt;This is a paragraph. I&amp;rsquo;m typing in a paragraph isn&amp;rsquo;t this fun?&lt;/p&gt;&#xA;&lt;p&gt;Now I&amp;rsquo;m in paragraph 2.&#xA;I&amp;rsquo;m still in paragraph 2 too!&lt;/p&gt;&#xA;&lt;p&gt;I&amp;rsquo;m in paragraph three!&lt;/p&gt;&#xA;&lt;blockquote&gt;&#xA;&lt;p&gt;This is a block quote. You can either&#xA;manually wrap your lines and put a &lt;code&gt;&amp;gt;&lt;/code&gt; before every line or you can let your lines get really long and wrap on their own.&#xA;It doesn&amp;rsquo;t make a difference so long as they start with a &lt;code&gt;&amp;gt;&lt;/code&gt;.&lt;/p&gt;</description>
     </item>
-    
   </channel>
 </rss>
