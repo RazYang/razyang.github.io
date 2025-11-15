@@ -7,16 +7,16 @@
 &lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;$ nixgraph --depth&lt;span style="color:#f92672"&gt;=&lt;/span&gt;&lt;span style="color:#ae81ff"&gt;99&lt;/span&gt; --out gcc_runtime_deps.png &lt;span style="color:#e6db74"&gt;&amp;#39;nixpkgs#stdenv.cc&amp;#39;&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;$ nixgraph --depth&lt;span style="color:#f92672"&gt;=&lt;/span&gt;&lt;span style="color:#ae81ff"&gt;99&lt;/span&gt; --out gcc_buildtime_deps.png --buildtime &lt;span style="color:#e6db74"&gt;&amp;#39;nixpkgs#stdenv.cc&amp;#39;&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;很好，运行时依赖看起来非常的合理：
-&lt;img alt="运行时依赖" loading="lazy" src="way-to-nix-2/gcc_runtime_deps.svg"&gt;&lt;/p&gt;
+&lt;img alt="运行时依赖" loading="lazy" src="https://blog.razyang.com/posts/way-to-nix-2/gcc_runtime_deps.svg"&gt;&lt;/p&gt;
 &lt;p&gt;然而下图是gcc的构建依赖关系(希望你有一些心理准备)：&lt;/p&gt;
-&lt;p&gt;&lt;a href="way-to-nix-2/gcc_buildtime_deps.svg"&gt;构建依赖&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href="gcc_buildtime_deps.svg"&gt;构建依赖&lt;/a&gt;&lt;/p&gt;
 &lt;h1 id="stdenv"&gt;stdenv&lt;/h1&gt;
 &lt;p&gt;首先我们要了解一下stdenv，这个概念在nixpkgs至关重要。stdenv可以看作cc
-&lt;img alt="stage1-gcc" loading="lazy" src="way-to-nix-2/stage1-gcc.svg"&gt;
-&lt;img alt="stage2-gcc" loading="lazy" src="way-to-nix-2/stage2-gcc.svg"&gt;&lt;/p&gt;
-&lt;p&gt;&lt;img alt="stage3-gcc" loading="lazy" src="way-to-nix-2/stage3-gcc.svg"&gt;
-&lt;img alt="stage4-gcc" loading="lazy" src="way-to-nix-2/stage4-gcc.svg"&gt;
-&lt;img alt="stdenv-gcc" loading="lazy" src="way-to-nix-2/final-gcc.svg"&gt;&lt;/p&gt;
+&lt;img alt="stage1-gcc" loading="lazy" src="https://blog.razyang.com/posts/way-to-nix-2/stage1-gcc.svg"&gt;
+&lt;img alt="stage2-gcc" loading="lazy" src="https://blog.razyang.com/posts/way-to-nix-2/stage2-gcc.svg"&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt="stage3-gcc" loading="lazy" src="https://blog.razyang.com/posts/way-to-nix-2/stage3-gcc.svg"&gt;
+&lt;img alt="stage4-gcc" loading="lazy" src="https://blog.razyang.com/posts/way-to-nix-2/stage4-gcc.svg"&gt;
+&lt;img alt="stdenv-gcc" loading="lazy" src="https://blog.razyang.com/posts/way-to-nix-2/final-gcc.svg"&gt;&lt;/p&gt;
 &lt;h1 id="to-be-continue"&gt;TO BE CONTINUE&lt;/h1&gt;</description></item><item><title>也许你应该了解一下replit背后的神秘技术——nix</title><link>https://blog.razyang.com/posts/way-to-nix-3/</link><pubDate>Sat, 01 Nov 2025 19:12:11 +0800</pubDate><guid>https://blog.razyang.com/posts/way-to-nix-3/</guid><description>&lt;p&gt;最开始接触nix是在18年，当时参加SHLUG的每周四晚活动，偶然得知有一个名为NixOS的发行版，概念非常高大上。什么Declarative、Reproducible之类的名词虽然不是很懂，但让刚接触计算机领域没有几年的我深感震撼。不过当时我总觉得，容器技术已经很好了，非常好的解决了可复现的问题（仅限运行），只需要引如一个容器运行时，这个包含应用的迷你操作系统就可以四处被部署，简直不要太方便。&lt;/p&gt;
 &lt;h1 id="从历史讲起"&gt;从历史讲起&lt;/h1&gt;
 &lt;pre&gt;&lt;code&gt;不同与很多热门技术出身名门，例如go出自google，javascript出身于网景与微软的浏览器大战，rust出身于Mozilla。似乎我们现在在用的各种技术基本都“出身权贵”。不过跟这些技术领域的老大哥相比，nix有一点倒是没有掉队，那就是年龄。诞生于2003年的nix到目前为止也已经二十多岁。nix一开始并没有获得什么关注，毕竟其理念与计算机领域的事实标准相去甚远。
