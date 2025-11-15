@@ -19,8 +19,7 @@
 &lt;img alt="stdenv-gcc" loading="lazy" src="https://blog.razyang.com/posts/way-to-nix-2/final-gcc.svg"&gt;&lt;/p&gt;
 &lt;h1 id="to-be-continue"&gt;TO BE CONTINUE&lt;/h1&gt;</description></item><item><title>也许你应该了解一下replit背后的神秘技术——nix</title><link>https://blog.razyang.com/posts/way-to-nix-3/</link><pubDate>Sat, 01 Nov 2025 19:12:11 +0800</pubDate><guid>https://blog.razyang.com/posts/way-to-nix-3/</guid><description>&lt;p&gt;最开始接触nix是在18年，当时参加SHLUG的每周四晚活动，偶然得知有一个名为NixOS的发行版，概念非常高大上。什么Declarative、Reproducible之类的名词虽然不是很懂，但让刚接触计算机领域没有几年的我深感震撼。不过当时我总觉得，容器技术已经很好了，非常好的解决了可复现的问题（仅限运行），只需要引如一个容器运行时，这个包含应用的迷你操作系统就可以四处被部署，简直不要太方便。&lt;/p&gt;
 &lt;h1 id="从历史讲起"&gt;从历史讲起&lt;/h1&gt;
-&lt;pre&gt;&lt;code&gt;不同与很多热门技术出身名门，例如go出自google，javascript出身于网景与微软的浏览器大战，rust出身于Mozilla。似乎我们现在在用的各种技术基本都“出身权贵”。不过跟这些技术领域的老大哥相比，nix有一点倒是没有掉队，那就是年龄。诞生于2003年的nix到目前为止也已经二十多岁。nix一开始并没有获得什么关注，毕竟其理念与计算机领域的事实标准相去甚远。
-&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;不同与很多热门技术出身名门，例如go出自google，javascript出身于网景与微软的浏览器大战，rust出身于Mozilla。似乎我们现在在用的各种技术基本都“出身权贵”。不过跟这些技术领域的老大哥相比，nix有一点倒是没有掉队，那就是年龄。诞生于2003年的nix到目前为止也已经二十多岁。nix一开始并没有获得什么关注，毕竟其理念与计算机领域的事实标准相去甚远。&lt;/p&gt;
 &lt;h2 id="系统包管理"&gt;系统包管理&lt;/h2&gt;
 &lt;p&gt;现在我们所熟知的，linux的目录结构，例如/bin/,/lib,/usr都遵循FHS标准，而这个基本结构在1995年就基本定型。在这个标准下，一个软件的不同部分被散落在文件系统的各个位置，例如可执行程序可能会被放在/usr/bin/、/usr/local/bin/、/bin/、/sbin/、/usr/sbin等等，而不同程序引用的函数库则被统一存放在另外的路径中，更别提软件还有配置文件，配置文件放在一个地方，配置文件中又包含了软件定义的各种数据文件路径、日志文件路径、资源文件路径等等。&lt;/p&gt;
 &lt;p&gt;这样以来同一个软件安装之后被大卸八块，不知道是不是称作“卸装”更为贴切。为了应对这些软件如何正确被“卸装”的问题，包管理应运而生。包管理是linux领域内老生常谈的话题了，他解决了在“这个Linux发行版的某个特定版本”中打包，分发到其他“这个Linux发行版的特定相同版本”的问题。&lt;/p&gt;
