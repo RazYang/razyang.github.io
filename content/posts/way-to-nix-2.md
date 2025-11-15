@@ -1,7 +1,7 @@
 ---
 title: "nixpkgs中stdenv的bootstrap过程"
 date: 2025-11-14T09:22:11+08:00
-draft: false
+draft: true
 ---
 
 
