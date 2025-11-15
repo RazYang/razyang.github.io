@@ -9,7 +9,6 @@ params:
   tocopen: true
   UseHugoToc: false
   ShowBreadCrumbs: true
-  ShowPostNavLinks: true
   ShowCodeCopyButtons: true
   ShowPostNavLinks: true
   ShowReadingTime: true
