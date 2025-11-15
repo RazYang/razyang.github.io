@@ -1,32 +1,175 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>Misc</title><link>https://blog.razyang.com/</link><description>Recent content on Misc</description><generator>Hugo -- gohugo.io</generator><language>en</language><lastBuildDate>Fri, 08 Dec 2023 16:34:44 +0800</lastBuildDate><atom:link href="https://blog.razyang.com/index.xml" rel="self" type="application/rss+xml"/><item><title>Nix and Content Address</title><link>https://blog.razyang.com/posts/nix-and-content-address/</link><pubDate>Fri, 08 Dec 2023 16:34:44 +0800</pubDate><guid>https://blog.razyang.com/posts/nix-and-content-address/</guid><description>Nix目前的构建和发布模型 derivation outputs and output paths Nix软件构建以Derivation为核心，Derivation有以下核心属性：
-Derivation表示了软件的构建过程； Derivation可以依赖其他Derivation； Derivation执行后具有副作用，会在/nix/store下生成路径为xxx-name.drv的文件，其中xxx为该Derivation的唯一标识符，在任何电脑中都一致； xxx-name.drv可以被进一步构建成产物，并且产物的路径存储在xxx-name.drv中，在构建前就可以知道，此处我们称为outPath； outPath路径中也存在唯一标识，同一个Derrvation产生的.drv文件中的outPath一定相同； 由于构建前就知道产物路径，引用某个derivation时，只要检查其中存储的outPath存不存在，就可以判定需不需要重复编译； 不同机器可以通过共享outPath来共享构建缓存； 这里存在两个目录，一个是.drv的目录，一个是outPath的目录，两者的路径中都有唯一标识符，且路径都根据Derivation的参数计算得来，outPath存储在.drv中。
-构建过程 nix包管理的软件构建过程用伪码表示大致如下:
-derivation = getDerivationFrom(nixpkgs, package_name) drv = derivatoin() # 此处存在副作用，derivation函数调用后会生成.drv文件 if checkOutPathExist(drv.outPath): pass # 如果产物目录已经存在，就不用重复构建了 else: drv.build() # drv.build()会将软件构建后放到drv.outPath中 binary cache引入后:
-derivation = getDerivationFrom(nixpkgs, package_name) drv = derivatoin() if checkOutPathExist(drv.outPath): pass else: if fetchOutPathFromBinaryCache(drv.outPath): pass # 尝试从BinaryCache服务器中下载对应的包，放到outPath中 else: drv.build() Input-Address Model 总体来说，上面我们描述的目前Nix的做法是将软件构建软件的过程（包括输入）抽象为一个哈希值，这个唯一哈希值可以代表软件的某个特定状态，然后用这个哈希值来索引构建后的软件。
-在构建过程当中，任何输入的改变必然会导致输出的路径发生变化： 过度重复构建 你可能已经意识到了一些不对，在正常的软件构建过程当中，输入的改变不一定会导致输出不同，比如说代码路径下面增加了一些文档，或者说构建流程发生了改变。
-然而在Nix目前的构建模型中，输入的任何变化都会导致输出路径的变化，但现实当中这样往往会导致一些不好的副作用。
-例如go语言的源码中使用perl来做代码单元测试，原则上来说，使用什么版本的perl做单元测试，或者是否做单元测试，都不会改变构建产物。我们可以认为，源码中不是所有改动都会影响产物。但在nix中，如果perl包发生了改变，而go又依赖perl做单元测试，那么go的产物路径就会发生变化，进而需要重新编译。再进一步，所有依赖go的包也需要重新编译，导致了很多没有必要的重复编译。
-Content-Address Model 解决上述问题的方式思路也很简单，就是使用content address的方式来确定构建缓存的实际目录。
-所谓content address，与input address相对。在input address的模型中，用于索引value的key与value内容无关； 但在content address的模型中，用于索引value的key是根据value的内容计算得来。content address最简单的例子就是使用文件的哈希值来索引文件，给定文件的哈希值，返回文件内容； 而input address典型例子就是给定文件的文件名，返回文件的内容；</description></item><item><title>Way to Nix 1</title><link>https://blog.razyang.com/posts/way-to-nix-1/</link><pubDate>Fri, 01 Dec 2023 11:56:15 +0800</pubDate><guid>https://blog.razyang.com/posts/way-to-nix-1/</guid><description>最近学习了一些Nix相关的东西，把家里大多数机器都切到了nixos上，感觉很不错。但是由于nix文档比较差，写自己配置的时候，很多时候需要看代码，或者抄别人的配置一点点凑，过程当中遇到了不少问题。也学习了不少Nix的基本概念，于是记录一下相关的概念和技术以免忘记。
-前阵子看过NickCao的前些年的一个视频，非常有条例的介绍了一些nix的基本概念，有兴趣可以去看一下：【金枪鱼之夜：Nix - 从构建系统到配置管理-哔哩哔哩】
-Nix as a build systems 构建系统一般就是指从源码生成产物的一套工具生态集合，就拿Makefile举例，几乎所有的构建过程都可以描述成如下形式的嵌套结构：
-构建目标: 构建原料 构建过程 围绕着gnu make，有一套完整的，有着悠久历史的构建系统，如GNU Autoconf，Cmake等，许多现代语言也包含了自己的构建系统，如rust的cargo，go的build，js的npm等等。也会有许多项目选择多种构建系统嵌套，如Cmake生成makefile调用Cargo来进行项目构建。
-Derivation 也许nix里最重要的概念就是Derivation了，它与nix中的很多概念相互关联，并作为纽带。可以说理解了Derivation，至少就理解了Nix的半壁江山。
-首先， derivition是nix中的一个内置函数,代码实现位于(https://github.com/NixOS/nix/blob/188c803ddb5e63b243ddb84eba9b70e45475b7ea/src/libexpr/primops/derivation.nix#L2)，实际调用的是内部C++函数prim_derivationStrict:
-nix-repl&amp;gt; derivation «lambda @ /builtin/derivation.nix:5:1» 与其他构建系统类似，derivation包含了构建原料，构建目标以及构建过程，调用这个函数必须有name、system以及builder三个必选参数，其他可选参数可参考Nix Reference Manual:
-nix-repl&amp;gt; derivation {name = &amp;#34;target_name&amp;#34;;system=&amp;#34;x86_64-linux&amp;#34;; builder=&amp;#34;builder_binary&amp;#34;;} «derivation /nix/store/6z9jj5khn7j3xi2fv8fibpzj6gnq4iz4-target_name.drv» 值得注意的是，derivation函数存在一个副作用，即在/nix/store/目录下生成一个以.drv为后缀的文件，并且文件名中包含了一个类似哈希的字符串，保证路径的唯一性。derivation有如下属性:
-同样参数的derivation函数调用后生成的文件，路径一定是一样的（在哈希算法的保证下，可以假定不同参数调用derivation产生的drv文件路径一定是不同的） derivation中包含的所有参数必须为字面量，或预先可以确定哈希值的固定内容（Fixed-Output Derivations） derivation可以互相依赖，一个derivation可以依赖另外一个derivation derivation可以被执行，类似Makefile一样可以被构建 derivation会被在隔离的环境执行，其中没有类似/bin/bash之类可以预先假定存在的路径，能且只能通过derivation依赖的方式在构建过程当中引入其他软件 derivation执行后会产生两个关键参数，out.out以及out.outPath，一个存储了drv的路径，一个存储了构建产物的路径 nix-repl&amp;gt; d = derivation {name = &amp;#34;target_name&amp;#34;;system=&amp;#34;x86_64-linux&amp;#34;; builder=&amp;#34;builder_binary&amp;#34;;} nix-repl&amp;gt; d.out.out «derivation /nix/store/6z9jj5khn7j3xi2fv8fibpzj6gnq4iz4-target_name.drv» nix-repl&amp;gt; d.out.outPath &amp;#34;/nix/store/pd5l9rzb613v5lv4c6q2m0c81zd9w3l6-target_name&amp;#34; nix-repl&amp;gt; d.out.out == d true nix-repl&amp;gt; d.out == d true 以上属性组合的结果，使得nix构建系统存在如下特性：</description></item><item><title>叛逃</title><link>https://blog.razyang.com/posts/defection/</link><pubDate>Sun, 07 Aug 2022 12:52:43 +0800</pubDate><guid>https://blog.razyang.com/posts/defection/</guid><description>所谓叛逃 仔细想一想，自从上大学开始，我用linux做为日常工作和学习的系统也有将近六年了。 这六年来，常见的Linux发行版基本都装了个遍，常见的桌面环境和窗口管理器也基本用了个遍。 不过随着时间流逝，我逐渐发现，桌面环境折腾无数遍，其实实际在用的图形界面软件只有三个：emacs、chrome、alacritty。
-更抽象一点的话，其实就是一个编辑器，一个浏览器还有一个终端模拟器。其他软件使用频率都非常低，最近两年内，我逐渐发现自己打开文件管理器的频率也越来越低，以至于文件管理器对于我日常的电脑使用来说，也成为了一个没有必要的软件。
-铺垫了这么多，其实我就是想说，爷叛逃了，到MacOS。
-目的地 其实也没啥道理，最近想买一个笔记本，看了一圈。intel 11代摆大烂，12代功耗爆炸；AMD 6000系的笔记本，续航稍微好一些，但GPU硬件设计有问题。仔细想了一想，苹果的笔记本成了这两年唯一没重大问题，没开过什么倒车的设备了。
-所以，Macbook Air m2 16+512，请： 基本配置 终端应用 brew install p7zip starship rustup-init tmux go coreutils grep startship bottom zoxide fzf ripgrep shellcheck starship hugo fd 7z pandoc neofetch 大概先装这么多吧，zsh配置后续再迁移过来
-GUI 写这篇文章的时候突然恍然大悟，原来我能在这台电脑上装qq和微信，突然间一股惆怅的情绪涌上心头
-其实也没啥好装的，浏览器暂时看看safari表现怎么样了，之后如果不成的话再装chrome。
-文本编辑器的话，还是当之无愧的emacs。虽然在macos上的这个版本没有native compile，但是感觉响应速度没有什么明显区别：
-brew install --cask emacs</description></item><item><title>Template Post</title><link>https://blog.razyang.com/posts/template-post/</link><pubDate>Thu, 04 Aug 2022 11:30:51 +0800</pubDate><guid>https://blog.razyang.com/posts/template-post/</guid><description>segment segment segment segment Text style This text is in italics. And so is this text.
-This text is in bold. And so is this text.
-This text is in both. As is this! And this!
-Paragraph This is a paragraph. I&amp;rsquo;m typing in a paragraph isn&amp;rsquo;t this fun?
-Now I&amp;rsquo;m in paragraph 2. I&amp;rsquo;m still in paragraph 2 too!
-I&amp;rsquo;m in paragraph three!
-This is a block quote. You can either manually wrap your lines and put a &amp;gt; before every line or you can let your lines get really long and wrap on their own.</description></item></channel></rss>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>Misc</title><link>https://blog.razyang.com/</link><description>Recent content on Misc</description><generator>Hugo -- 0.152.2</generator><language>en</language><lastBuildDate>Fri, 14 Nov 2025 09:22:11 +0800</lastBuildDate><atom:link href="https://blog.razyang.com/index.xml" rel="self" type="application/rss+xml"/><item><title>nixpkgs中stdenv的bootstrap过程</title><link>https://blog.razyang.com/posts/way-to-nix-2/</link><pubDate>Fri, 14 Nov 2025 09:22:11 +0800</pubDate><guid>https://blog.razyang.com/posts/way-to-nix-2/</guid><description>&lt;h1 id="学习nixpkgs-bootstrap"&gt;学习nixpkgs bootstrap&lt;/h1&gt;
+&lt;p&gt;这篇文章主要记录学习&lt;a href="https://trofi.github.io/posts/240-nixpkgs-bootstrap-intro.html"&gt;nixpkgs bootstrap intro&lt;/a&gt;这篇文章的过程，如果其中有涉及到其他博客内容，我会将相关链接贴到文章最后。&lt;/p&gt;
+&lt;p&gt;其实我对c编译器自举这个事情本来就比较感兴趣，由于c/c++的工具链相对古老，而且没有语言的包管理，语言生态都是由不同的小工具东拼西凑出来的。所以想要从头构建出一个C/C++编译器相对困难很多，但是这也是不可避免的事情。
+毕竟C/C++历史悠久，即使像是go这种原生完全不依赖C生态，连标准库都不依赖libc的语言，也会有CGO的存在来复用C/C++的库。所以说当今时代的计算机领域，如果想要构建出一套自己的“软件集合”，一直向上追溯的话，GCC+glibc似乎就是一切的根源，当然clang/musl也是一种选择，但那就不是一篇文章能够覆盖的内容量了。&lt;/p&gt;
+&lt;h2 id="overview"&gt;Overview&lt;/h2&gt;
+&lt;p&gt;nixpkgs是现在事实上最大的单一软件仓库（2025），可以很简单的复用已有软件。也得益于nix强制要求构建时声明构建依赖，并且自动解算运行时依赖，我们可以使用工具简单的获得特定软件包的构建和运行时依赖树：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;$ nixgraph --depth&lt;span style="color:#f92672"&gt;=&lt;/span&gt;&lt;span style="color:#ae81ff"&gt;99&lt;/span&gt; --out gcc_runtime_deps.png &lt;span style="color:#e6db74"&gt;&amp;#39;nixpkgs#stdenv.cc&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;$ nixgraph --depth&lt;span style="color:#f92672"&gt;=&lt;/span&gt;&lt;span style="color:#ae81ff"&gt;99&lt;/span&gt; --out gcc_buildtime_deps.png --buildtime &lt;span style="color:#e6db74"&gt;&amp;#39;nixpkgs#stdenv.cc&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;很好，运行时依赖看起来非常的合理：
+&lt;img alt="运行时依赖" loading="lazy" src="way-to-nix-2/gcc_runtime_deps.svg"&gt;&lt;/p&gt;
+&lt;p&gt;然而下图是gcc的构建依赖关系(希望你有一些心理准备)：&lt;/p&gt;
+&lt;p&gt;&lt;a href="way-to-nix-2/gcc_buildtime_deps.svg"&gt;构建依赖&lt;/a&gt;&lt;/p&gt;
+&lt;h1 id="stdenv"&gt;stdenv&lt;/h1&gt;
+&lt;p&gt;首先我们要了解一下stdenv，这个概念在nixpkgs至关重要。stdenv可以看作cc
+&lt;img alt="stage1-gcc" loading="lazy" src="way-to-nix-2/stage1-gcc.svg"&gt;
+&lt;img alt="stage2-gcc" loading="lazy" src="way-to-nix-2/stage2-gcc.svg"&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt="stage3-gcc" loading="lazy" src="way-to-nix-2/stage3-gcc.svg"&gt;
+&lt;img alt="stage4-gcc" loading="lazy" src="way-to-nix-2/stage4-gcc.svg"&gt;
+&lt;img alt="stdenv-gcc" loading="lazy" src="way-to-nix-2/final-gcc.svg"&gt;&lt;/p&gt;
+&lt;h1 id="to-be-continue"&gt;TO BE CONTINUE&lt;/h1&gt;</description></item><item><title>也许你应该了解一下replit背后的神秘技术——nix</title><link>https://blog.razyang.com/posts/way-to-nix-3/</link><pubDate>Sat, 01 Nov 2025 19:12:11 +0800</pubDate><guid>https://blog.razyang.com/posts/way-to-nix-3/</guid><description>&lt;p&gt;最开始接触nix是在18年，当时参加SHLUG的每周四晚活动，偶然得知有一个名为NixOS的发行版，概念非常高大上。什么Declarative、Reproducible之类的名词虽然不是很懂，但让刚接触计算机领域没有几年的我深感震撼。不过当时我总觉得，容器技术已经很好了，非常好的解决了可复现的问题（仅限运行），只需要引如一个容器运行时，这个包含应用的迷你操作系统就可以四处被部署，简直不要太方便。&lt;/p&gt;
+&lt;h1 id="从历史讲起"&gt;从历史讲起&lt;/h1&gt;
+&lt;pre&gt;&lt;code&gt;不同与很多热门技术出身名门，例如go出自google，javascript出身于网景与微软的浏览器大战，rust出身于Mozilla。似乎我们现在在用的各种技术基本都“出身权贵”。不过跟这些技术领域的老大哥相比，nix有一点倒是没有掉队，那就是年龄。诞生于2003年的nix到目前为止也已经二十多岁。nix一开始并没有获得什么关注，毕竟其理念与计算机领域的事实标准相去甚远。
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id="系统包管理"&gt;系统包管理&lt;/h2&gt;
+&lt;pre&gt;&lt;code&gt;现在我们所熟知的，linux的目录结构，例如/bin/,/lib,/usr都遵循FHS标准，而这个基本结构在1995年就基本定型。在这个标准下，一个软件的不同部分被散落在文件系统的各个位置，例如可执行程序可能会被放在/usr/bin/、/usr/local/bin/、/bin/、/sbin/、/usr/sbin等等，而不同程序引用的函数库则被统一存放在另外的路径中，更别提软件还有配置文件，配置文件放在一个地方，配置文件中又包含了软件定义的各种数据文件路径、日志文件路径、资源文件路径等等。
+这样以来同一个软件安装之后被大卸八块，不知道是不是称作“卸装”更为贴切。为了应对这些软件如何正确被“卸装”的问题，包管理应运而生。包管理是linux领域内老生常谈的话题了，他解决了在“这个Linux发行版的某个特定版本”中打包，分发到其他“这个Linux发行版的特定相同版本”的问题。
+[TODO] 图片
+很好，那现在我只需要打包就对了，是吧？可能没有那么简单，如果把软件的生命周期中的关键动作抽象为“开发”，“构建”，“分发”，“部署”的话，问题就来了：
+在哪开发，在哪构建、通过什么手段分发、用什么手段以及部署在什么环境中
+答案就是现实中，N种开发环境、M种构建环境、K种部署环境，如果涉及到软件依赖，则问题就更为复杂：
+软件的开发依赖哪里来，构建依赖哪里来，运行时依赖哪里来
+不同Linux发行版包管理中都维护了一套“没有版本冲突”的软件集合，定期发布稳定版本，后续在这套固定的软件集合中提供安全补丁以及部分包的升级服务。但真正的问题在于ubuntu 22.04中打的包，没有办法保证在ubuntu 20.04中运行，更没法保证在例如debian 10,centos 7等其他不同类型的发行版中运行。你在任何发行版中打的包，实际上隐含了一个含义，即你的软件或多或少依赖这个特定发行版的特定状态。随着时间迁移，这个发行版的软件源更新，实际上没有任何人能够保证软件还能正常编译或运行。
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id="软件包管理"&gt;软件包管理&lt;/h2&gt;
+&lt;pre&gt;&lt;code&gt;当然，很多编程语言意识到了这个问题，并在很长的历史阶段诞生了相当多的编程语言级别的包管理，甚至新的编程语言会将包管理与编译器一同分发，例如go、rust等等。这些包管理可以锁定构建依赖的版本，并通常不再采用原生的函数库与其他进程共享代码，也就不存在运行时依赖的问题，越来越多的软件选择不再通过发行版的包管理分发。但事情还是没有那么简单，主要有两点关键事实：
+* 很难完全避免使用外部的so库，而这些函数库通常由操作系统分发。
+* “依赖”不仅仅指函数库，构建或运行时使用的外部命令，不同版本或实现也可能表现不同，例如cmake、tar等等。
+第一种情况，不是没有解决方案。例如python，python语言本身被称作胶水语言，其中很多热门的包内部实际为c/C++实现，这些包的构建和分发其实面临相当大的挑战。而python的解决方案可以参考PEP 513, PEP 571, PEP 599, PEP 600, PEP 656几个标准。这些标准定义了在哪些环境构建的包、可以在哪些环境中运行。例如使用manylinux1环境构建的包，几乎可以在现在能够见到的任何linux发行版中运行，此外还有manylinux2010、manylinux2014等等，每种标准都有对应的libc和gcc版本。你可能会问，有了manylinux1，那为什么还要其他的标准呢？如果说你打算引一个近两年发布的so库版本，那自然就会知道为什么了。
+而第二种情况，如果踩到坑，只能自求多福了我的朋友。
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id="容器化"&gt;容器化！！！&lt;/h2&gt;
+&lt;pre&gt;&lt;code&gt;如果说上面说的系统包管理与软件包管理的割裂和历史包袱是一场慢性疾病的话，容器的出现无异于是一剂良药。容器的出现意味着可以使用比操作系统更细粒度的方式部署软件和服务，软件将自己和自己的所有依赖打包在容器镜像内，仿佛一个时间胶囊将其永久定格在一个时刻，无论何时将其拿出，都可以按照预期工作，这极大解决了软件发布和运行的问题。但很显然，时间胶囊里的机器还能正常工作，但是外部环境却可能今非西比，假如你手握Dockerfile想重新构建打包，很可能因为发行版的软件源无法工作，或某个重要依赖更新而无法不加改造的重新编译。
+就差一步，就差最后一步。虽然范德彪告诉了我们，时光并不能倒流。但我们已经掌握了容器技术，只要有一种比Dockerfile更好的方式，将容器的构建依赖也定格住，似乎就完美了。
+BuildPacks就是为了补齐这最后一块儿拼图而做出的努力，其主打的概念就是“从源码直接构建为容器镜像”，似乎可以绕过操作系统直接构建容器镜像了？事实并不是这样的，BuildPacks实际上封装的是语言级别的包管理，所有你需要使用操作系统包管理额外做的事情，在实际场景中，你仍需要编写Dockerfile来构建容器。当然，除非为所有软件的每个版本都单独构建容器镜像并且归档，以后容器取代进程成为操作系统最小调度单位，例如执行一个ls命令，实际上执行的是ls程序以及所有依赖组成的容器。虽然这听起来很夸张，但像是ClearOS，Fedora SilverBlue真的有向这个方向努力，虽然结果似乎不太理想。
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h1 id="可组合性的缺失"&gt;可组合性的缺失&lt;/h1&gt;
+&lt;h1 id="to-be-continue"&gt;TO BE CONTINUE&lt;/h1&gt;</description></item><item><title>Nix and Content Address</title><link>https://blog.razyang.com/posts/nix-and-content-address/</link><pubDate>Fri, 08 Dec 2023 16:34:44 +0800</pubDate><guid>https://blog.razyang.com/posts/nix-and-content-address/</guid><description>&lt;h1 id="nix目前的构建和发布模型"&gt;Nix目前的构建和发布模型&lt;/h1&gt;
+&lt;h2 id="derivation-outputs-and-output-paths"&gt;&lt;code&gt;derivation outputs&lt;/code&gt; and &lt;code&gt;output paths&lt;/code&gt;&lt;/h2&gt;
+&lt;p&gt;Nix软件构建以Derivation为核心，Derivation有以下核心属性：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;Derivation表示了软件的构建过程；&lt;/li&gt;
+&lt;li&gt;Derivation可以依赖其他Derivation；&lt;/li&gt;
+&lt;li&gt;Derivation执行后具有副作用，会在&lt;code&gt;/nix/store&lt;/code&gt;下生成路径为&lt;code&gt;xxx-name.drv&lt;/code&gt;的文件，其中xxx为该Derivation的唯一标识符，在任何电脑中都一致；&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;xxx-name.drv&lt;/code&gt;可以被进一步构建成产物，并且产物的路径存储在&lt;code&gt;xxx-name.drv&lt;/code&gt;中，在构建前就可以知道，此处我们称为&lt;code&gt;outPath&lt;/code&gt;；&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;outPath&lt;/code&gt;路径中也存在唯一标识，同一个Derrvation产生的&lt;code&gt;.drv&lt;/code&gt;文件中的&lt;code&gt;outPath&lt;/code&gt;一定相同；&lt;/li&gt;
+&lt;li&gt;由于构建前就知道产物路径，引用某个derivation时，只要检查其中存储的&lt;code&gt;outPath&lt;/code&gt;存不存在，就可以判定需不需要重复编译；&lt;/li&gt;
+&lt;li&gt;不同机器可以通过共享&lt;code&gt;outPath&lt;/code&gt;来共享构建缓存；&lt;/li&gt;
+&lt;/ol&gt;
+&lt;blockquote&gt;
+&lt;blockquote&gt;
+&lt;p&gt;这里存在两个目录，一个是&lt;code&gt;.drv&lt;/code&gt;的目录，一个是&lt;code&gt;outPath&lt;/code&gt;的目录，两者的路径中都有唯一标识符，且路径都根据Derivation的参数计算得来，&lt;code&gt;outPath&lt;/code&gt;存储在&lt;code&gt;.drv&lt;/code&gt;中。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;/blockquote&gt;
+&lt;h2 id="构建过程"&gt;构建过程&lt;/h2&gt;
+&lt;p&gt;nix包管理的软件构建过程用伪码表示大致如下:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-python" data-lang="python"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;derivation &lt;span style="color:#f92672"&gt;=&lt;/span&gt; getDerivationFrom(nixpkgs, package_name)
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;drv &lt;span style="color:#f92672"&gt;=&lt;/span&gt; derivatoin() &lt;span style="color:#75715e"&gt;# 此处存在副作用，derivation函数调用后会生成.drv文件&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;if&lt;/span&gt; checkOutPathExist(drv&lt;span style="color:#f92672"&gt;.&lt;/span&gt;outPath):
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;pass&lt;/span&gt; &lt;span style="color:#75715e"&gt;# 如果产物目录已经存在，就不用重复构建了&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;else&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; drv&lt;span style="color:#f92672"&gt;.&lt;/span&gt;build() &lt;span style="color:#75715e"&gt;# drv.build()会将软件构建后放到drv.outPath中&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;binary cache引入后:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-python" data-lang="python"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;derivation &lt;span style="color:#f92672"&gt;=&lt;/span&gt; getDerivationFrom(nixpkgs, package_name)
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;drv &lt;span style="color:#f92672"&gt;=&lt;/span&gt; derivatoin()
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;if&lt;/span&gt; checkOutPathExist(drv&lt;span style="color:#f92672"&gt;.&lt;/span&gt;outPath):
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;pass&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;else&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;if&lt;/span&gt; fetchOutPathFromBinaryCache(drv&lt;span style="color:#f92672"&gt;.&lt;/span&gt;outPath):
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;pass&lt;/span&gt; &lt;span style="color:#75715e"&gt;# 尝试从BinaryCache服务器中下载对应的包，放到outPath中&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;else&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; drv&lt;span style="color:#f92672"&gt;.&lt;/span&gt;build()
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h1 id="input-address-model"&gt;Input-Address Model&lt;/h1&gt;
+&lt;p&gt;总体来说，上面我们描述的目前Nix的做法是将软件构建软件的过程（包括输入）抽象为一个哈希值，这个唯一哈希值可以代表软件的某个特定状态，然后用这个哈希值来索引构建后的软件。&lt;/p&gt;
+&lt;p&gt;在构建过程当中，任何输入的改变必然会导致输出的路径发生变化：
+&lt;img alt="input address model" loading="lazy" src="https://blog.razyang.com/posts/nix-and-content-address/input_address.svg"&gt;
+&lt;img alt="input address model" loading="lazy" src="https://blog.razyang.com/posts/nix-and-content-address/input_address_dependencies_change.svg"&gt;&lt;/p&gt;
+&lt;h2 id="过度重复构建"&gt;过度重复构建&lt;/h2&gt;
+&lt;p&gt;你可能已经意识到了一些不对，在正常的软件构建过程当中，输入的改变不一定会导致输出不同，比如说代码路径下面增加了一些文档，或者说构建流程发生了改变。&lt;/p&gt;
+&lt;p&gt;然而在Nix目前的构建模型中，输入的任何变化都会导致输出路径的变化，但现实当中这样往往会导致一些不好的副作用。&lt;/p&gt;
+&lt;p&gt;例如go语言的源码中使用perl来做代码单元测试，原则上来说，使用什么版本的perl做单元测试，或者是否做单元测试，都不会改变构建产物。我们可以认为，源码中不是所有改动都会影响产物。但在nix中，如果perl包发生了改变，而go又依赖perl做单元测试，那么go的产物路径就会发生变化，进而需要重新编译。再进一步，所有依赖go的包也需要重新编译，导致了很多没有必要的重复编译。&lt;/p&gt;
+&lt;h1 id="content-address-model"&gt;Content-Address Model&lt;/h1&gt;
+&lt;p&gt;解决上述问题的方式思路也很简单，就是使用content address的方式来确定构建缓存的实际目录。&lt;/p&gt;
+&lt;p&gt;所谓content address，与input address相对。在input address的模型中，用于索引value的key与value内容无关；
+但在content address的模型中，用于索引value的key是根据value的内容计算得来。content address最简单的例子就是使用文件的哈希值来索引文件，给定文件的哈希值，返回文件内容；
+而input address典型例子就是给定文件的文件名，返回文件的内容；&lt;/p&gt;</description></item><item><title>Way to Nix 1</title><link>https://blog.razyang.com/posts/way-to-nix-1/</link><pubDate>Fri, 01 Dec 2023 11:56:15 +0800</pubDate><guid>https://blog.razyang.com/posts/way-to-nix-1/</guid><description>&lt;p&gt;最近学习了一些Nix相关的东西，把家里大多数机器都切到了nixos上，感觉很不错。但是由于nix文档比较差，写自己配置的时候，很多时候需要看代码，或者抄别人的配置一点点凑，过程当中遇到了不少问题。也学习了不少Nix的基本概念，于是记录一下相关的概念和技术以免忘记。&lt;/p&gt;
+&lt;p&gt;前阵子看过NickCao的前些年的一个视频，非常有条例的介绍了一些nix的基本概念，有兴趣可以去看一下：&lt;a href="https://b23.tv/vxaiTuS"&gt;【金枪鱼之夜：Nix - 从构建系统到配置管理-哔哩哔哩】&lt;/a&gt;&lt;/p&gt;
+&lt;h1 id="nix-as-a-build-systems"&gt;Nix as a build systems&lt;/h1&gt;
+&lt;p&gt;构建系统一般就是指从源码生成产物的一套工具生态集合，就拿Makefile举例，几乎所有的构建过程都可以描述成如下形式的嵌套结构：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-Makefile" data-lang="Makefile"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#a6e22e"&gt;构建目标&lt;/span&gt;&lt;span style="color:#f92672"&gt;:&lt;/span&gt; 构建原料
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; 构建过程
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;围绕着gnu make，有一套完整的，有着悠久历史的构建系统，如GNU Autoconf，Cmake等，许多现代语言也包含了自己的构建系统，如rust的cargo，go的build，js的npm等等。也会有许多项目选择多种构建系统嵌套，如Cmake生成makefile调用Cargo来进行项目构建。&lt;/p&gt;
+&lt;h2 id="derivation"&gt;Derivation&lt;/h2&gt;
+&lt;p&gt;也许nix里最重要的概念就是&lt;a href="https://nixos.org/manual/nix/stable/language/derivations.html"&gt;Derivation&lt;/a&gt;了，它与nix中的很多概念相互关联，并作为纽带。可以说理解了Derivation，至少就理解了Nix的半壁江山。&lt;/p&gt;
+&lt;p&gt;首先， derivition是nix中的一个内置函数,代码实现位于(&lt;a href="https://github.com/NixOS/nix/blob/188c803ddb5e63b243ddb84eba9b70e45475b7ea/src/libexpr/primops/derivation.nix#L2"&gt;https://github.com/NixOS/nix/blob/188c803ddb5e63b243ddb84eba9b70e45475b7ea/src/libexpr/primops/derivation.nix#L2&lt;/a&gt;)，实际调用的是内部C++函数&lt;a href="https://github.com/NixOS/nix/blob/188c803ddb5e63b243ddb84eba9b70e45475b7ea/src/libexpr/primops.cc#L1041"&gt;prim_derivationStrict&lt;/a&gt;:&lt;/p&gt;
+&lt;pre tabindex="0"&gt;&lt;code class="language-repl" data-lang="repl"&gt;nix-repl&amp;gt; derivation
+«lambda @ /builtin/derivation.nix:5:1»
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;与其他构建系统类似，derivation包含了构建原料，构建目标以及构建过程，调用这个函数必须有&lt;code&gt;name&lt;/code&gt;、&lt;code&gt;system&lt;/code&gt;以及&lt;code&gt;builder&lt;/code&gt;三个必选参数，其他可选参数可参考&lt;a href="https://nixos.org/manual/nix/stable/language/derivations.html#optional"&gt;Nix Reference Manual&lt;/a&gt;:&lt;/p&gt;
+&lt;pre tabindex="0"&gt;&lt;code&gt;nix-repl&amp;gt; derivation {name = &amp;#34;target_name&amp;#34;;system=&amp;#34;x86_64-linux&amp;#34;; builder=&amp;#34;builder_binary&amp;#34;;}
+«derivation /nix/store/6z9jj5khn7j3xi2fv8fibpzj6gnq4iz4-target_name.drv»
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;值得注意的是，derivation函数存在一个副作用，即在/nix/store/目录下生成一个以&lt;code&gt;.drv&lt;/code&gt;为后缀的文件，并且文件名中包含了一个类似哈希的字符串，保证路径的唯一性。derivation有如下属性:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;同样参数的derivation函数调用后生成的文件，路径一定是一样的（&lt;em&gt;在哈希算法的保证下，可以假定不同参数调用derivation产生的drv文件路径一定是不同的&lt;/em&gt;）&lt;/li&gt;
+&lt;li&gt;derivation中包含的所有参数必须为字面量，或预先可以确定哈希值的固定内容（&lt;strong&gt;Fixed-Output Derivations&lt;/strong&gt;）&lt;/li&gt;
+&lt;li&gt;derivation可以互相依赖，一个derivation可以依赖另外一个derivation&lt;/li&gt;
+&lt;li&gt;derivation可以被执行，类似Makefile一样可以被构建&lt;/li&gt;
+&lt;li&gt;derivation会被在隔离的环境执行，其中没有类似&lt;code&gt;/bin/bash&lt;/code&gt;之类可以预先假定存在的路径，能且只能通过derivation依赖的方式在构建过程当中引入其他软件&lt;/li&gt;
+&lt;li&gt;derivation执行后会产生两个关键参数，out.out以及out.outPath，一个存储了drv的路径，一个存储了构建产物的路径&lt;/li&gt;
+&lt;/ul&gt;
+&lt;pre tabindex="0"&gt;&lt;code&gt;nix-repl&amp;gt; d = derivation {name = &amp;#34;target_name&amp;#34;;system=&amp;#34;x86_64-linux&amp;#34;; builder=&amp;#34;builder_binary&amp;#34;;}
+nix-repl&amp;gt; d.out.out
+«derivation /nix/store/6z9jj5khn7j3xi2fv8fibpzj6gnq4iz4-target_name.drv»
+nix-repl&amp;gt; d.out.outPath
+&amp;#34;/nix/store/pd5l9rzb613v5lv4c6q2m0c81zd9w3l6-target_name&amp;#34;
+nix-repl&amp;gt; d.out.out == d
+true
+nix-repl&amp;gt; d.out == d
+true
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;以上属性组合的结果，使得nix构建系统存在如下特性：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;任何软件的derivation在/nix/store中的路径包含了唯一哈希值，这个路径实际上代表了产物是用&lt;code&gt;何种输入源&lt;/code&gt;，以&lt;code&gt;何种构建方式&lt;/code&gt;，配置&lt;code&gt;何种构建参数&lt;/code&gt;所构建出来的结果，且由于derivation之间互相依赖，整颗依赖树的任何一个环节发生了变化，重新构建后，derivation路径相应也会发生变化&lt;/li&gt;
+&lt;li&gt;derivation既可以描述软件的构建过程，又可以描述多种软件组合称为操作系统的过程，进一步说，如果把操作系统当成目标产物，通过derivation的嵌套，nix可以描述出整个操作系统的构建过程，且在保证可完全可复现。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h1 id="nix-as-programing-language"&gt;Nix as programing language&lt;/h1&gt;
+&lt;p&gt;与其他构建系统采用的语法风格不同的是，Nix采用了函数式语法，且没有类型系统，这也是Nix看起来比较吓人的主要原因&lt;/p&gt;</description></item><item><title>叛逃</title><link>https://blog.razyang.com/posts/defection/</link><pubDate>Sun, 07 Aug 2022 12:52:43 +0800</pubDate><guid>https://blog.razyang.com/posts/defection/</guid><description>&lt;h1 id="所谓叛逃"&gt;所谓叛逃&lt;/h1&gt;
+&lt;p&gt;仔细想一想，自从上大学开始，我用linux做为日常工作和学习的系统也有将近六年了。
+这六年来，常见的Linux发行版基本都装了个遍，常见的桌面环境和窗口管理器也基本用了个遍。
+不过随着时间流逝，我逐渐发现，桌面环境折腾无数遍，其实实际在用的图形界面软件只有三个：&lt;code&gt;emacs&lt;/code&gt;、&lt;code&gt;chrome&lt;/code&gt;、&lt;code&gt;alacritty&lt;/code&gt;。&lt;/p&gt;
+&lt;p&gt;更抽象一点的话，其实就是一个编辑器，一个浏览器还有一个终端模拟器。其他软件使用频率都非常低，最近两年内，我逐渐发现自己打开文件管理器的频率也越来越低，以至于文件管理器对于我日常的电脑使用来说，也成为了一个没有必要的软件。&lt;/p&gt;
+&lt;p&gt;铺垫了这么多，其实我就是想说，爷叛逃了，到MacOS。&lt;/p&gt;
+&lt;h1 id="目的地"&gt;目的地&lt;/h1&gt;
+&lt;p&gt;其实也没啥道理，最近想买一个笔记本，看了一圈。intel 11代摆大烂，12代功耗爆炸；AMD 6000系的笔记本，续航稍微好一些，但GPU硬件设计有问题。仔细想了一想，苹果的笔记本成了这两年唯一没重大问题，没开过什么倒车的设备了。&lt;/p&gt;
+&lt;p&gt;所以，Macbook Air m2 16+512，请：
+&lt;img alt="neofetch" loading="lazy" src="https://blog.razyang.com/posts/defection/2022-08-07_13.23.10.png"&gt;&lt;/p&gt;
+&lt;h1 id="基本配置"&gt;基本配置&lt;/h1&gt;
+&lt;h2 id="终端应用"&gt;终端应用&lt;/h2&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;brew install p7zip starship rustup-init tmux go coreutils grep startship bottom zoxide fzf ripgrep shellcheck starship hugo fd 7z pandoc neofetch
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;大概先装这么多吧，zsh配置后续再迁移过来&lt;/p&gt;
+&lt;h2 id="gui"&gt;GUI&lt;/h2&gt;
+&lt;blockquote&gt;
+&lt;p&gt;写这篇文章的时候突然恍然大悟，原来我能在这台电脑上装qq和微信，突然间一股惆怅的情绪涌上心头&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;其实也没啥好装的，浏览器暂时看看safari表现怎么样了，之后如果不成的话再装chrome。&lt;/p&gt;
+&lt;p&gt;文本编辑器的话，还是当之无愧的emacs。虽然在macos上的这个版本没有native compile，但是感觉响应速度没有什么明显区别：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;brew install --cask emacs
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;</description></item><item><title>Template Post</title><link>https://blog.razyang.com/posts/template-post/</link><pubDate>Thu, 04 Aug 2022 11:30:51 +0800</pubDate><guid>https://blog.razyang.com/posts/template-post/</guid><description>&lt;h1 id="segment"&gt;segment&lt;/h1&gt;
+&lt;h2 id="segment-1"&gt;segment&lt;/h2&gt;
+&lt;h3 id="segment-2"&gt;segment&lt;/h3&gt;
+&lt;h4 id="segment-3"&gt;segment&lt;/h4&gt;
+&lt;h3 id="text-style"&gt;Text style&lt;/h3&gt;
+&lt;p&gt;&lt;em&gt;This text is in italics.&lt;/em&gt;
+&lt;em&gt;And so is this text.&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;This text is in bold.&lt;/strong&gt;
+&lt;strong&gt;And so is this text.&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;&lt;strong&gt;This text is in both.&lt;/strong&gt;&lt;/em&gt;
+&lt;strong&gt;&lt;em&gt;As is this!&lt;/em&gt;&lt;/strong&gt;
+&lt;em&gt;&lt;strong&gt;And this!&lt;/strong&gt;&lt;/em&gt;&lt;/p&gt;
+&lt;h3 id="paragraph"&gt;Paragraph&lt;/h3&gt;
+&lt;p&gt;This is a paragraph. I&amp;rsquo;m typing in a paragraph isn&amp;rsquo;t this fun?&lt;/p&gt;
+&lt;p&gt;Now I&amp;rsquo;m in paragraph 2.
+I&amp;rsquo;m still in paragraph 2 too!&lt;/p&gt;
+&lt;p&gt;I&amp;rsquo;m in paragraph three!&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;This is a block quote. You can either
+manually wrap your lines and put a &lt;code&gt;&amp;gt;&lt;/code&gt; before every line or you can let your lines get really long and wrap on their own.
+It doesn&amp;rsquo;t make a difference so long as they start with a &lt;code&gt;&amp;gt;&lt;/code&gt;.&lt;/p&gt;</description></item></channel></rss>

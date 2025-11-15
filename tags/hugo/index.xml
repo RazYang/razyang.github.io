@@ -1,7 +1,21 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>Hugo on Misc</title><link>https://blog.razyang.com/tags/hugo/</link><description>Recent content in Hugo on Misc</description><generator>Hugo -- gohugo.io</generator><language>en</language><lastBuildDate>Thu, 04 Aug 2022 11:30:51 +0800</lastBuildDate><atom:link href="https://blog.razyang.com/tags/hugo/index.xml" rel="self" type="application/rss+xml"/><item><title>Template Post</title><link>https://blog.razyang.com/posts/template-post/</link><pubDate>Thu, 04 Aug 2022 11:30:51 +0800</pubDate><guid>https://blog.razyang.com/posts/template-post/</guid><description>segment segment segment segment Text style This text is in italics. And so is this text.
-This text is in bold. And so is this text.
-This text is in both. As is this! And this!
-Paragraph This is a paragraph. I&amp;rsquo;m typing in a paragraph isn&amp;rsquo;t this fun?
-Now I&amp;rsquo;m in paragraph 2. I&amp;rsquo;m still in paragraph 2 too!
-I&amp;rsquo;m in paragraph three!
-This is a block quote. You can either manually wrap your lines and put a &amp;gt; before every line or you can let your lines get really long and wrap on their own.</description></item></channel></rss>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>Hugo on Misc</title><link>https://blog.razyang.com/tags/hugo/</link><description>Recent content in Hugo on Misc</description><generator>Hugo -- 0.152.2</generator><language>en</language><lastBuildDate>Thu, 04 Aug 2022 11:30:51 +0800</lastBuildDate><atom:link href="https://blog.razyang.com/tags/hugo/index.xml" rel="self" type="application/rss+xml"/><item><title>Template Post</title><link>https://blog.razyang.com/posts/template-post/</link><pubDate>Thu, 04 Aug 2022 11:30:51 +0800</pubDate><guid>https://blog.razyang.com/posts/template-post/</guid><description>&lt;h1 id="segment"&gt;segment&lt;/h1&gt;
+&lt;h2 id="segment-1"&gt;segment&lt;/h2&gt;
+&lt;h3 id="segment-2"&gt;segment&lt;/h3&gt;
+&lt;h4 id="segment-3"&gt;segment&lt;/h4&gt;
+&lt;h3 id="text-style"&gt;Text style&lt;/h3&gt;
+&lt;p&gt;&lt;em&gt;This text is in italics.&lt;/em&gt;
+&lt;em&gt;And so is this text.&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;This text is in bold.&lt;/strong&gt;
+&lt;strong&gt;And so is this text.&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;&lt;strong&gt;This text is in both.&lt;/strong&gt;&lt;/em&gt;
+&lt;strong&gt;&lt;em&gt;As is this!&lt;/em&gt;&lt;/strong&gt;
+&lt;em&gt;&lt;strong&gt;And this!&lt;/strong&gt;&lt;/em&gt;&lt;/p&gt;
+&lt;h3 id="paragraph"&gt;Paragraph&lt;/h3&gt;
+&lt;p&gt;This is a paragraph. I&amp;rsquo;m typing in a paragraph isn&amp;rsquo;t this fun?&lt;/p&gt;
+&lt;p&gt;Now I&amp;rsquo;m in paragraph 2.
+I&amp;rsquo;m still in paragraph 2 too!&lt;/p&gt;
+&lt;p&gt;I&amp;rsquo;m in paragraph three!&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;This is a block quote. You can either
+manually wrap your lines and put a &lt;code&gt;&amp;gt;&lt;/code&gt; before every line or you can let your lines get really long and wrap on their own.
+It doesn&amp;rsquo;t make a difference so long as they start with a &lt;code&gt;&amp;gt;&lt;/code&gt;.&lt;/p&gt;</description></item></channel></rss>
