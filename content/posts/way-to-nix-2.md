@@ -20,21 +20,21 @@ $ nixgraph --depth=99 --out gcc_runtime_deps.png 'nixpkgs#stdenv.cc'
 $ nixgraph --depth=99 --out gcc_buildtime_deps.png --buildtime 'nixpkgs#stdenv.cc'
 ```
 很好，运行时依赖看起来非常的合理：
-![运行时依赖](way-to-nix-2/gcc_runtime_deps.svg)
+![运行时依赖](gcc_runtime_deps.svg)
 
 
 然而下图是gcc的构建依赖关系(希望你有一些心理准备)：
 
-[构建依赖](way-to-nix-2/gcc_buildtime_deps.svg)
+[构建依赖](gcc_buildtime_deps.svg)
 
 # stdenv
 首先我们要了解一下stdenv，这个概念在nixpkgs至关重要。stdenv可以看作cc
-![stage1-gcc](way-to-nix-2/stage1-gcc.svg)
-![stage2-gcc](way-to-nix-2/stage2-gcc.svg)
+![stage1-gcc](stage1-gcc.svg)
+![stage2-gcc](stage2-gcc.svg)
 
-![stage3-gcc](way-to-nix-2/stage3-gcc.svg)
-![stage4-gcc](way-to-nix-2/stage4-gcc.svg)
-![stdenv-gcc](way-to-nix-2/final-gcc.svg)
+![stage3-gcc](stage3-gcc.svg)
+![stage4-gcc](stage4-gcc.svg)
+![stdenv-gcc](final-gcc.svg)
 
 
 # TO BE CONTINUE
