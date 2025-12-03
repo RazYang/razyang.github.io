@@ -23,7 +23,7 @@
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; /lib64/ld-linux-x86-64.so.2 &lt;span style="color:#f92672"&gt;(&lt;/span&gt;0x00007b5716606000&lt;span style="color:#f92672"&gt;)&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;libc.so.6以及ld-linux-x86-64.so.2算作什么呢？似乎不只运行阶段，我们构建的时候也需要这些文件&lt;/p&gt;
 &lt;p&gt;好好好，让我们弥补一下：&lt;/p&gt;
-&lt;p&gt;&lt;img alt="complex_one" loading="lazy" src="comples_one.svg"&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt="complex_one" loading="lazy" src="https://blog.razyang.com/posts/nix1/complex_one.svg"&gt;&lt;/p&gt;
 &lt;p&gt;在上面这张图中，我将gcc也算作了构建依赖，使用bash脚本作为构建器，其中可能使用mkdir之类的命令，所以说可能也需要coreutils作为构建依赖，实际问题可能会更复杂，但总体来说都能总结为（源码+依赖 -&amp;gt; 产物）&lt;/p&gt;
 &lt;h1 id="究极的构建系统"&gt;究极的构建系统&lt;/h1&gt;
 &lt;p&gt;很好，很好，很好。现在我们既理解了构建的本质，也有了hello world的实际例子，理论与实践相结合，现在离目标的“究极构建系统”就差一个程序员了。&lt;/p&gt;
