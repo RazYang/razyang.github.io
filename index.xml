@@ -1,4 +1,73 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>Misc</title><link>https://blog.razyang.com/</link><description>Recent content on Misc</description><generator>Hugo -- 0.152.2</generator><language>en</language><lastBuildDate>Sat, 22 Nov 2025 15:09:04 +0800</lastBuildDate><atom:link href="https://blog.razyang.com/index.xml" rel="self" type="application/rss+xml"/><item><title>[0x01]：nix之路——究极构建系统</title><link>https://blog.razyang.com/posts/nix1/</link><pubDate>Sat, 22 Nov 2025 15:09:04 +0800</pubDate><guid>https://blog.razyang.com/posts/nix1/</guid><description>&lt;h1 id="构建的本质"&gt;构建的本质&lt;/h1&gt;
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>Misc</title><link>https://blog.razyang.com/</link><description>Recent content on Misc</description><generator>Hugo -- 0.152.2</generator><language>en</language><lastBuildDate>Thu, 04 Dec 2025 14:25:04 +0800</lastBuildDate><atom:link href="https://blog.razyang.com/index.xml" rel="self" type="application/rss+xml"/><item><title>[0x01]：nix之路——一个软件包的艺术之旅</title><link>https://blog.razyang.com/posts/nix2/</link><pubDate>Thu, 04 Dec 2025 14:25:04 +0800</pubDate><guid>https://blog.razyang.com/posts/nix2/</guid><description>&lt;p&gt;上一篇文章简单介绍了一下nix核心在做些什么，似乎有些空中楼阁。这次我希望能够通过一个具体的包，让你感受一下，为什么nix这个家伙即使在如此离经叛道的情况下，经过二十多年的发展，狂揽一大批忠实用户和开发者。&lt;/p&gt;
+&lt;p&gt;当然，你需要先安装nix，并开启&lt;code&gt;nix-command&lt;/code&gt;以及&lt;code&gt;flakes&lt;/code&gt;两个特性，因为篇幅问题，这部分我就不太赘述了，直接参考&lt;a href="https://docs.determinate.systems/determinate-nix/"&gt;determinate systems的文档&lt;/a&gt;好了。&lt;/p&gt;
+&lt;p&gt;本文将带你以最快的速度理解nix的flake机制，准备好了吗？&lt;/p&gt;
+&lt;h1 id="hello-nix"&gt;hello nix&lt;/h1&gt;
+&lt;p&gt;在我们之前有关“究极构建系统”的设想中，将构建过程抽象成了一个函数，参数是构建依赖，返回值是构建结果。而nix实质上，就是一个函数式的构建系统，函数nix的一等公民。接收参数，返回结果：
+&lt;img alt="hello" loading="lazy" src="https://blog.razyang.com/posts/nix2/hello.png"&gt;&lt;/p&gt;
+&lt;p&gt;有关上面的代码，你需要理解以下关键内容，更多有关nix语法的介绍可以参考&lt;a href="https://nixos-cn.org/tutorials/lang/QuickOverview.html"&gt;nixos-cn的文档&lt;/a&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;声明了一个函数，以&lt;code&gt;:&lt;/code&gt;为分割，前面为参数，后面为返回值&lt;/li&gt;
+&lt;li&gt;函数接收一个&lt;code&gt;属性集&lt;/code&gt;作为参数，其中只有nixpkgs_path一个属性，当不传递任何参数时，改属性的默认值为fetchGit函数的返回结果&lt;/li&gt;
+&lt;li&gt;let &amp;hellip; in是一个语法，作用是在一个在有限作用域内声明绑定关系，便于在后面反复使用&lt;/li&gt;
+&lt;li&gt;import关键字的作用是从一个路径导入函数，&lt;strong&gt;如果路径是一个目录，则导入default.nix&lt;/strong&gt;&lt;/li&gt;
+&lt;li&gt;nixpkgs是一个使用nix语言编写的代码仓库，其中包含了超过&lt;a href="https://search.nixos.org/packages"&gt;12万个包&lt;/a&gt;的构建代码&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;那这个函数做了什么呢？其实什么也没做什么复杂的事情:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;使用git下载一个目录&lt;/li&gt;
+&lt;li&gt;将目录导入为函数，调用得到pkgs&lt;/li&gt;
+&lt;li&gt;返回pkgs中的hello&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;这个函数可以说是最简单的构建函数，什么也不做，只把构建参数直接返回。调用函数也很简单：
+&lt;img alt="hello derivation" loading="lazy" src="https://blog.razyang.com/posts/nix2/hello_drv.png"&gt;&lt;/p&gt;
+&lt;p&gt;看我们的函数返回了一个什么，&lt;code&gt;.drv&lt;/code&gt;？不要怕，如果你读过上一篇【nix之路——究极构建系统】，这个东西就是之前提及的&lt;code&gt;.bld&lt;/code&gt;。&lt;/p&gt;
+&lt;p&gt;使用&lt;code&gt;nix derivation show&lt;/code&gt;可以将这个文件转换为json查看：&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;nixpkgs仓库比较大，下载需要多等待一会儿
+&lt;img alt="derivation show" loading="lazy" src="https://blog.razyang.com/posts/nix2/derivation_show.png"&gt;
+当然，直接指定绝对路径也可以:
+&lt;img alt="derivation show" loading="lazy" src="https://blog.razyang.com/posts/nix2/derivation_show_2.png"&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;所以说，&lt;code&gt;pkgs.hello&lt;/code&gt;实际上对应一个&lt;code&gt;.drv&lt;/code&gt;文件，这个文件包含了能够构建这个包的所有信息。那我们如何最终构建他呢？也很简单：
+&lt;img alt="build hello" loading="lazy" src="https://blog.razyang.com/posts/nix2/build_hello.png"&gt;&lt;/p&gt;
+&lt;p&gt;构建完成后，默认会在当前目录建立一个指向产物目录的软连接，让我们可以快速使用&lt;/p&gt;
+&lt;p&gt;当然，以上只是为了让你更好的理解nix代码和产物的关系，实际上用下面的命令可以构建出一样的结果：
+&lt;img alt="one liner" loading="lazy" src="https://blog.razyang.com/posts/nix2/one_liner_build.png"&gt;&lt;/p&gt;
+&lt;h1 id="hello-flakenix"&gt;hello flake.nix&lt;/h1&gt;
+&lt;p&gt;也许你发现了，上面我们每次调用default.nix的时候，都要重新下载nixpkgs。而且，函数参数的默认值是一个下载函数，感觉哪里怪怪的。&lt;/p&gt;
+&lt;p&gt;其实nix提供了一种更好的的，导入外部nix代码依赖的机制，叫做&lt;code&gt;flake&lt;/code&gt;，不同于default.nix，当指定一个目录时，&lt;code&gt;flake.nix&lt;/code&gt;是默认的入口文件。他的格式也很简单：
+&lt;img alt="hello flake" loading="lazy" src="https://blog.razyang.com/posts/nix2/hello_flake.png"&gt;&lt;/p&gt;
+&lt;p&gt;这个文件核心在于&lt;code&gt;inputs&lt;/code&gt;以及&lt;code&gt;outputs&lt;/code&gt;两部分&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;inputs&lt;/code&gt;
+inputs声明了需要的外部nix代码仓库地址，地址可以是git仓库、本地路径、压缩包、压缩包下载链接等等&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;outputs&lt;/code&gt;
+outputs很显然是一个函数，就像上面我们写的default.nix一样，他接收一个&lt;code&gt;属性集&lt;/code&gt;作为参数，属性来自&lt;code&gt;inputs&lt;/code&gt;中的声明，最后返回一个属性集。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;也许你注意到了，不同于我们自己写的&lt;code&gt;default.nix&lt;/code&gt;，这里的参数多出了一个&lt;code&gt;self&lt;/code&gt;属性，我们可以简单模拟一下&lt;code&gt;flake.nix&lt;/code&gt;的执行过程：
+&lt;img alt="call_flake" loading="lazy" src="https://blog.razyang.com/posts/nix2/call_flake.png"&gt;
+等等等等，发生了什么？这里的&lt;code&gt;fix&lt;/code&gt;函数其实是nix语言中的一个常用trick，称为&lt;code&gt;fix point&lt;/code&gt;，既然你早晚要面对他，我决定在这里直接告诉你它的存在。&lt;/p&gt;
+&lt;p&gt;不过，我并不打算在这里过分展开&lt;code&gt;fix point&lt;/code&gt;的原理，有关&lt;code&gt;fix point&lt;/code&gt;的原理，我看过比较好的介绍是&lt;a href="https://akavel.github.io/post/nix-fixpoint/"&gt;akavel的这篇文章&lt;/a&gt;，你可以选择去深入了解一下。&lt;/p&gt;
+&lt;p&gt;如果你暂时还不想知道&lt;code&gt;fix&lt;/code&gt;干了什么，只需要知道它的效果就可以了，在这里我们尝试使用我们的&lt;code&gt;call_flake.nix&lt;/code&gt;调用一下flake.nix，看看发生了什么：
+&lt;img alt="flake self" loading="lazy" src="https://blog.razyang.com/posts/nix2/flake_self.png"&gt;&lt;/p&gt;
+&lt;p&gt;可以看到，如果我们在ouptuts的返回值中导出self，这个self就不断指向返回结果自己。这样可以让你很方便的在outputs的实现中，引用自己对外导出的部分。&lt;/p&gt;
+&lt;p&gt;好了，小插曲到此为止，还是让我们看一下如何正常操作&lt;code&gt;flake.nix&lt;/code&gt;吧：&lt;/p&gt;
+&lt;p&gt;首先，使用&lt;code&gt;nix flake show&lt;/code&gt;可以查看flake中outputs函数的返回结果，&lt;a href="https://nix.dev/manual/nix/2.32/command-ref/new-cli/nix3-flake-check.html"&gt;但默认支持的类型有限&lt;/a&gt;,其他不支持展示的属性只能展示为&lt;code&gt;unknown&lt;/code&gt;：
+&lt;img alt="flake_show" loading="lazy" src="https://blog.razyang.com/posts/nix2/flake_show.png"&gt;&lt;/p&gt;
+&lt;p&gt;如果你想知道flake的详细返回内容是什么怎么办？你可以调用nix repl，使用&lt;code&gt;:lf&lt;/code&gt;来调用&lt;code&gt;flake.nix&lt;/code&gt;，获取返回值：
+&lt;a href="nix_repl_flake.png"&gt;nix_repl_flake&lt;/a&gt;&lt;/p&gt;
+&lt;h1 id="一个软件包的艺术之旅"&gt;一个软件包的艺术之旅&lt;/h1&gt;
+&lt;p&gt;我们现在知道&lt;code&gt;flake&lt;/code&gt;机制的运作原理，以及如何将gnu hello作为&lt;code&gt;packages.${system}.hello&lt;/code&gt;作为flake的返回值返回，那我们都可以对这个包做些什么操作呢？&lt;/p&gt;
+&lt;p&gt;首先，我们可以使用&lt;code&gt;nix build&lt;/code&gt;快速构建一个flake仓库导出的包，构建后默认会在当前目录建立一个指向构建产物的软链接：
+&lt;img alt="nix_build" loading="lazy" src="https://blog.razyang.com/posts/nix2/nix_build.png"&gt;
+你也可以选择使用&lt;code&gt;nix run&lt;/code&gt;直接运行它，运行前他也会检查是否构建过，如果没构建会先构建再执行：
+&lt;img alt="nix_run" loading="lazy" src="https://blog.razyang.com/posts/nix2/nix_run.png"&gt;
+也可以使用&lt;code&gt;nix derivation show&lt;/code&gt;查看这个包对应的&lt;code&gt;.drv&lt;/code&gt;文件：
+&lt;img alt="nix_derivation_show" loading="lazy" src="https://blog.razyang.com/posts/nix2/nix_derivation_show.png"&gt;
+你也可以将某个包，以及他的所有运行时依赖拷贝到别处，只需要一个内核就可以运行，可以使用chroot验证一下：
+&lt;img alt="nix_copy" loading="lazy" src="https://blog.razyang.com/posts/nix2/nix_copy.png"&gt;
+当然，nixpkgs本身也是一个flake仓库，&lt;a href="https://search.nixos.org/packages"&gt;nixpkgs仓库中任何包&lt;/a&gt;都可以用上面的方式操作：
+&lt;img alt="neovim" loading="lazy" src="https://blog.razyang.com/posts/nix2/neovim.png"&gt;&lt;/p&gt;</description></item><item><title>[0x01]：nix之路——究极构建系统</title><link>https://blog.razyang.com/posts/nix1/</link><pubDate>Sat, 22 Nov 2025 15:09:04 +0800</pubDate><guid>https://blog.razyang.com/posts/nix1/</guid><description>&lt;h1 id="构建的本质"&gt;构建的本质&lt;/h1&gt;
 &lt;p&gt;让我们先忘掉nix，假设我们现在要设计一个究极的构建系统，能构建计算机领域的任何东西。为了实现这个伟大的目标，我们首先要思考一下，什么是“构建”&lt;/p&gt;
 &lt;p&gt;拿最简单的hello world举例。我们写完了hello world的源码，这个源码是如何变为产物的？&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;$ gcc hello.c -o hello
